@@ -126,7 +126,7 @@ MySQL 支持两种复合数据类型：
 net start mysql
 
 -- 停止服务
-new stop mysql
+net stop mysql
 
 --连接数据库
 mysql -u 用户名 -p 密码;
