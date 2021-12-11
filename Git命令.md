@@ -74,3 +74,57 @@ git rm -r [dir]
 # 重命名一个文件或目录
 git mv [file] [newfile]
 ```
+
+# 10. git log命令
+```shell
+# 查看历史提交记录
+git log
+# 查看简洁历史提交记录
+git log --oneline
+# 查看带分支、合并等信息的历史提交记录
+git log --graph
+# 查看指定作者提交的历史记录
+git log --author=wenqi1
+# 查看指定时间段提交的历史记录
+git log --before={3.weeks.ago} --after={2021-12-11}
+```
+
+# 11. git blame命令
+```shell
+# 查看指定文件的修改记录
+git blame <file>
+```
+
+# 12. git remote命令
+```shell
+# 显示所有远程仓
+git remote -v
+# 显示指定远程仓的信息
+git remote show [remote url]
+# 添加远程仓库
+git remote add [仓库名] [url]
+# 删除远程仓库
+git remote rm [仓库名]
+# 修改仓库名
+git remote rename [旧名][新名]
+```
+
+# 13. git fetch命令
+```shell
+# 从远程获取代码库
+git fetch [仓库名]
+```
+
+# 14. git pull命令
+```shell
+# 从远程获取代码并合并本地，相当于git fetch和git merge
+git pull <仓库名> <分支名>
+```
+
+# 15. git push命令
+```shell
+# 将本地的分支版本上传到远程并合并
+git push <仓库名> <分支名>
+# 如果本地与远程有差异，想强制推送
+git push --force <仓库名> <分支名>
+```
