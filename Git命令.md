@@ -128,3 +128,32 @@ git push <仓库名> <分支名>
 # 如果本地与远程有差异，想强制推送
 git push --force <仓库名> <分支名>
 ```
+
+# 16. git branch/merge命令
+```shell
+# 创建新分支
+git branch <branchname>
+# 创建新分支，并切换到新分支
+git branch -b <branchname>
+# 切换分支
+git checkout <branchname>
+# 删除分支
+git branch -d <branchname>
+# 将指定分支合并到当前分支
+# 合并时如果产生了冲突，需要编辑冲突的文件
+# 编辑完成后，git add <冲突文件>，告诉Git文件冲突已解决
+# 冲突解决后，git commit提交
+git merge <branchname>
+```
+
+# 17. git tag命令
+```shell
+# 打标签
+git tag -a <tagname> -m "标签注释"
+# 给历史提交打标签
+git tag -a <tagname> <提交记录id> -m "标签注释"
+# 提交单个tag到远程仓
+git push <仓库名> <tagname>
+# 提交所有tag到远程仓
+git push <仓库名> --tags
+```
