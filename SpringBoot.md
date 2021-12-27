@@ -53,4 +53,4 @@ spring-boot-starter-security
 支持spring-security
 
 spring-boot-starter-web
-S支持全栈式Web开发，包括Tomcat和spring-webmvc
+支持全栈式Web开发，包括Tomcat和spring-webmvc
