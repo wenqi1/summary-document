@@ -130,5 +130,66 @@ GC Roots的对象有：
 2. 同步阻塞：运行的线程中获取对象的同步锁时，若该同步锁被其他线程占用，JVM会把线程放入“锁池”中
 3. 其他阻塞：运行的线程执行了sleep()、join()、发出了I/O请求时，JVM会把线程置为阻塞状态。当sleep超时、join等待线程终止或超时、I/O处理完毕时，线程重新进入就绪状态
 
+# 16.sleep()、wait()、join()和yield()区别
+sleep()和wait()
+1. sleep()是Thread的静态本地方法，wait()是Object的静态本地方法
+2. sleep()不会释放lock，wait()会释放lock
+3. sleep()不需要被唤醒，wait()需要（不指定时间的等待）
+
+yield()执行后线程直接进入就绪状态，马上释放CPU的执行权，但是有可能CPU的下次线程调度让该线程获得执行权
+
+join()执行后线程进入阻塞状态，例如线程A中调用线程B的join()，那么线程A会进入到阻塞队列，直到线程B结束
+
+# 17.对线程安全的理解
+在Java中堆是虚拟机管理的最大一块内存，是所有线程共享的一块内存区域，在虚拟机启动时创建。堆所存在的内存区域的唯一目的就是存放对象的实例，几乎所有的对象实例和数组都在这里分配内存。因此存在线程安全问题。
+
+在Java中栈时每个线程独有的，保存其运行状态和局部变量。栈在线程开始时初始化，每个线程的栈相互独立，因此栈是线程安全的。
+
+# 18.对守护线程的理解
+守护线程是为所有非守护线程提供服务的线程，它依赖整个进程而运行，当其他线程结束了，程序就结束了，守护线程也会被中断。
+
+# 19.Thread和RunRunnable区别
+二者本身就没有本质区别，就是接口和类的区别。Thread实现了Runnable接口并进行了扩展，所以Runnable或Thread本身没有可比性。
+
+由于守护线程的终止是自身无法控制的，千万不能做IO、File等操作，随时可能被中断。
+
+守护线程中产生的新线程也是守护线程。
+
+# 20.ThreadLocal的原理
+每一个Thread对象都含有一个ThreadLocalMap类型的成员变量threadLocals，它存储本线程中所有ThreadLocal对象及其对应的值。
+
+ThreadLocalMap由一个个Entry对象构成，Entry继承自WeakReference<ThreadLocal<?>>，Entry的key是ThreadLocal类型，value是Object类型。
+
+当执行set()时，ThreadLocal首先获取当前线程对象，再获取当前对象的ThreadLocalMap对象，最后以ThreadLocal为key，存入到ThreadLocalMap中。
+当执行get()时，ThreadLocal首先获取当前线程对象，再获取当前对象的ThreadLocalMap对象，最后用ThreadLocal为key，取出value。
+
+# 21.ThreadLocal内存泄露的原因
+ThreadLocalMap使用的弱引用作为key，如果ThreadLocal不存在外部的强引用时，key就会被GC回收，导致ThreadLocalMap中key为null，而value还存在强引用，只有线程退出后，value的强引用链才会断掉。
+
+ThreadLocal的正确使用方式：
+1. 每次使用完TreadLocal都调用它的remove()清除数据；
+2. 将ThreadLocal变量定义为private static，这样就一直存在ThreadLocal的强引用，能保证任何时候通过ThreadLocal的弱引用访问到Entry的value，进而清除。
+
+# 22.为什么使用线程池
+1. 降低资源消耗：提高线程的利用率，降低线程创建和销毁的消耗；
+2. 提高响应速度：直接获取，不需要再创建；
+3. 提高线程的可管理性。
+
+# 23.线程池的参数介绍
+1. corePoolSize：线程池中的常驻核心线程数。
+2. maximumPoolSize：线程池能够容纳同时执行的最大线程数。
+3. keepAliveTime：多余的空闲线程存活时间，当空间时间达到keepAliveTime值时，多余的线程会被销毁直到只剩下corePoolSize为止。
+4. unit：keepAliveTime的单位。（H/min/s）
+5. workQueue：任务队列，被提交但尚未被执行的任务。
+6. threadFactory：创建线程池中工作线程的线程工厂，一般用默认即可。
+7. handler：拒绝策略，表示当线程队列满了并且工作线程等于maxnumPoolSize时如何来拒绝请求执行的runnable的策略。
+
+# 24.线程池的处理流程
+线程池执行任务，判断核心线程是否已满，未满则创建核心线程执行；已满则判断任务队列是否已满，未满则放到任务队列；已满则判断是否达到最大线程数，未达到则创建临时线程数执行；已达到则根据拒绝策略处理任务。
+
+
+
+
+
 
 
