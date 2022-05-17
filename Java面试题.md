@@ -194,36 +194,40 @@ ThreadLocal的正确使用方式：
 
 # 26.线程池有哪些阻塞队列
 1. ArrayBlockingQueue
-ArrayBlockingQueue 是一个用数组实现的有界阻塞队列；
+   
+   ArrayBlockingQueue 是一个用数组实现的有界阻塞队列；
 
-队列满时插入操作被阻塞，队列空时，移除操作被阻塞；
+   队列满时插入操作被阻塞，队列空时，移除操作被阻塞；
 
-按照先进先出（FIFO）原则对元素进行排序；
+   按照先进先出（FIFO）原则对元素进行排序；
 
-默认不保证线程公平的访问队列；
+   默认不保证线程公平的访问队列；
 
-公平访问队列：按照阻塞的先后顺序访问队列，即先阻塞的线程先访问队列；
+   公平访问队列：按照阻塞的先后顺序访问队列，即先阻塞的线程先访问队列；
 
-公平性会降低吞吐量；
+   公平性会降低吞吐量。
 
 2. LinkedBlockingQueue
-一个基于链表结构的阻塞队列，此队列按 FIFO 排序元素，吞吐量通常要高于ArrayBlockingQueue。静态工厂方法 Executors.newFixedThreadPool()使用了这个队列。
+   
+   一个基于链表结构的阻塞队列，此队列按 FIFO 排序元素，吞吐量通常要高于ArrayBlockingQueue。静态工厂方法 Executors.newFixedThreadPool()使用了这个队列。
 
-LinkedBlockingQueue具有单链表和有界阻塞队列的功能；
+   LinkedBlockingQueue具有单链表和有界阻塞队列的功能；
 
-队列满时插入操作被阻塞，队列空时，移除操作被阻塞；
+   队列满时插入操作被阻塞，队列空时，移除操作被阻塞；
 
-默认和最大长度为Integer.MAX_VALUE，相当于无界 (值非常大：2^31-1)。
+   默认和最大长度为Integer.MAX_VALUE，相当于无界 (值非常大：2^31-1)。
 
 3. SynchronousQueue
-一个不存储元素的阻塞队列。每个插入操作必须等到另一个线程调用移除操作，否则插入操作一直处于阻塞状态，吞吐量通常要高于LinkedBlockingQueue，静态工厂方法 Executors.newCachedThreadPool()使用这个队列。
 
-SynchronousQueue本身不存储数据，调用了put方法后，队列里面也是空的;
+   一个不存储元素的阻塞队列。每个插入操作必须等到另一个线程调用移除操作，否则插入操作一直处于阻塞状态，吞吐量通常要高于LinkedBlockingQueue，静态工厂方法 Executors.newCachedThreadPool()使用这个队列。
 
-每一个put操作必须等待一个take操作完成，否则不能添加元素。
+   SynchronousQueue本身不存储数据，调用了put方法后，队列里面也是空的;
+
+   每一个put操作必须等待一个take操作完成，否则不能添加元素。
 
 4. PriorityBlockQueue
-一个具有优先级的无限阻塞队列。
+   
+   一个具有优先级的无限阻塞队列。
 
 # 27.线程池中线程复用的原理
 线程池将线程和任务进行解耦，线程是线程，任务是任务，摆脱了之前通过Thread创建线程时的一个线程必须对应一个任务的限制。在线程池中，同一个线程可以从阻塞队列中不断获取新任务来执行，其核心原理在于线程池对Thread进行了封装，并不是每次执行任务都会调用Thread.start()来创建新线程，而是让每个线程去执行一个"循环任务"，在这个"循环任务"中不停检查是否有任务需要被执行，如果有则直接执行，也就是调用任务中的run()，通过这种方式只使用固定的线程就将所有任务的run()串联起来。
