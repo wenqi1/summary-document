@@ -148,12 +148,12 @@ join()执行后线程进入阻塞状态，例如线程A中调用线程B的join()
 # 18.对守护线程的理解
 守护线程是为所有非守护线程提供服务的线程，它依赖整个进程而运行，当其他线程结束了，程序就结束了，守护线程也会被中断。
 
-# 19.Thread和RunRunnable区别
-二者本身就没有本质区别，就是接口和类的区别。Thread实现了Runnable接口并进行了扩展，所以Runnable或Thread本身没有可比性。
-
 由于守护线程的终止是自身无法控制的，千万不能做IO、File等操作，随时可能被中断。
 
 守护线程中产生的新线程也是守护线程。
+
+# 19.Thread和RunRunnable区别
+二者本身就没有本质区别，就是接口和类的区别。Thread实现了Runnable接口并进行了扩展，所以Runnable或Thread本身没有可比性。
 
 # 20.ThreadLocal的原理
 每一个Thread对象都含有一个ThreadLocalMap类型的成员变量threadLocals，它存储本线程中所有ThreadLocal对象及其对应的值。
@@ -161,6 +161,7 @@ join()执行后线程进入阻塞状态，例如线程A中调用线程B的join()
 ThreadLocalMap由一个个Entry对象构成，Entry继承自WeakReference<ThreadLocal<?>>，Entry的key是ThreadLocal类型，value是Object类型。
 
 当执行set()时，ThreadLocal首先获取当前线程对象，再获取当前对象的ThreadLocalMap对象，最后以ThreadLocal为key，存入到ThreadLocalMap中。
+
 当执行get()时，ThreadLocal首先获取当前线程对象，再获取当前对象的ThreadLocalMap对象，最后用ThreadLocal为key，取出value。
 
 # 21.ThreadLocal内存泄露的原因
@@ -186,6 +187,47 @@ ThreadLocal的正确使用方式：
 
 # 24.线程池的处理流程
 线程池执行任务，判断核心线程是否已满，未满则创建核心线程执行；已满则判断任务队列是否已满，未满则放到任务队列；已满则判断是否达到最大线程数，未达到则创建临时线程数执行；已达到则根据拒绝策略处理任务。
+
+# 25.线程池为什么采用阻塞队列
+1. 一般的队列只能保证作为一个有限长度的缓冲区，如果超出了缓冲长度就无法保留当前的任务了，阻塞队列通过阻塞可以保留住当前想要继续入队的任务；
+2. 阻塞队列可以保证任务队列中没有任务时阻塞获取任务的线程，使得线程进入wait状态，释放cpu资源。阻塞队列自带阻塞和唤醒的功能，不需要额外处理，无任务执行时，线程池利用阻塞队列的take()挂起，从而维持核心线程的存活、不至于一直占用cpu资源。
+
+# 26.线程池有哪些阻塞队列
+1. ArrayBlockingQueue
+ArrayBlockingQueue 是一个用数组实现的有界阻塞队列；
+
+队列满时插入操作被阻塞，队列空时，移除操作被阻塞；
+
+按照先进先出（FIFO）原则对元素进行排序；
+
+默认不保证线程公平的访问队列；
+
+公平访问队列：按照阻塞的先后顺序访问队列，即先阻塞的线程先访问队列；
+
+公平性会降低吞吐量；
+
+2. LinkedBlockingQueue
+一个基于链表结构的阻塞队列，此队列按 FIFO 排序元素，吞吐量通常要高于ArrayBlockingQueue。静态工厂方法 Executors.newFixedThreadPool()使用了这个队列。
+
+LinkedBlockingQueue具有单链表和有界阻塞队列的功能；
+
+队列满时插入操作被阻塞，队列空时，移除操作被阻塞；
+
+默认和最大长度为Integer.MAX_VALUE，相当于无界 (值非常大：2^31-1)。
+
+3. SynchronousQueue
+一个不存储元素的阻塞队列。每个插入操作必须等到另一个线程调用移除操作，否则插入操作一直处于阻塞状态，吞吐量通常要高于LinkedBlockingQueue，静态工厂方法 Executors.newCachedThreadPool()使用这个队列。
+
+SynchronousQueue本身不存储数据，调用了put方法后，队列里面也是空的;
+
+每一个put操作必须等待一个take操作完成，否则不能添加元素。
+
+4. PriorityBlockQueue
+一个具有优先级的无限阻塞队列。
+
+# 27.线程池中线程复用的原理
+线程池将线程和任务进行解耦，线程是线程，任务是任务，摆脱了之前通过Thread创建线程时的一个线程必须对应一个任务的限制。在线程池中，同一个线程可以从阻塞队列中不断获取新任务来执行，其核心原理在于线程池对Thread进行了封装，并不是每次执行任务都会调用Thread.start()来创建新线程，而是让每个线程去执行一个"循环任务"，在这个"循环任务"中不停检查是否有任务需要被执行，如果有则直接执行，也就是调用任务中的run()，通过这种方式只使用固定的线程就将所有任务的run()串联起来。
+
 
 
 
