@@ -229,13 +229,56 @@ ThreadLocal的正确使用方式：
    
    一个具有优先级的无限阻塞队列。
 
-# 27.线程池中线程复用的原理
+# 27.线程池的拒绝策略
+1. AbortPolicy：默认策略；新任务提交时直接抛出异常RejectedExecutionException。
+2. CallerRunsPolicy：使用调用者所在线程运行新的任务。
+3. DiscardPolicy：丢弃新的任务，且不抛出异常。
+4. DiscardOldestPolicy：调用poll方法丢弃工作队列队头的任务，然后尝试提交新任务
+
+# 28.线程池中线程复用的原理
 线程池将线程和任务进行解耦，线程是线程，任务是任务，摆脱了之前通过Thread创建线程时的一个线程必须对应一个任务的限制。在线程池中，同一个线程可以从阻塞队列中不断获取新任务来执行，其核心原理在于线程池对Thread进行了封装，并不是每次执行任务都会调用Thread.start()来创建新线程，而是让每个线程去执行一个"循环任务"，在这个"循环任务"中不停检查是否有任务需要被执行，如果有则直接执行，也就是调用任务中的run()，通过这种方式只使用固定的线程就将所有任务的run()串联起来。
 
+# 29. 对AOP的理解
+将程序中的交叉业务逻辑（比例：安全、日志、事务等），封装成一个切面，然后注入到目标对象（具体的业务逻辑）中。
 
+# 30. 对IOC的理解
+IOC容器：实际就是一个map，里面存放各种对象（xml里配置的bean、@Repository、@Service、@Controller、@Component），在项目启动时通过反射创建对象并放入容器。
 
+依赖注入：依赖注入是实现IOC的方法，在IOC容器运行期间，动态的将某种依赖关系注入到对象中。
 
+# 31. BeanFactory和ApplicationContext区别
+1. ApplicationContext是BeanFactory的子接口，拥有BeanFactory的所有功能。同时还继承了其他的接口，像MessageSource、ApplicationEventPublisher等，所以它还支持资源访问ResourcePatternResolver、国际化，事件传播ApplicationEventPublisher、载入有继承关系的多个上下文等；
+2. BeanFactory采用的是延迟加载形式来注入bean的，只有在使用到getBean()时，才对该bean进行实例化，这样我们就不能发现一些bean的配置问题。而ApplicationContext则相反，它是在容器启动的时候，一次性创建所有的bean，这样在容器启动时就能发现Spring中存在的配置错误。
+3. BeanFactory和ApplicationContext都支持BeanPostProcesser、BeanFactoryPostProcessor的使用，但两者的区别是：BeanFactory是手动注册的，ApplicationContext是自动注册的
 
+# 32. Spring中Bean的生命周期
+Bean的生命周期简单分为4个阶段：实例化、属性赋值、初始化和销毁。实例化和属性赋值对应构造方法和setter方法的注入，初始化和销毁是用户能自定义扩展的两个阶段。
 
+Spring之所以强大的原因是易扩展，生命周期相关的常用扩展点非常多。扩展点分2类：
+1. 作用于多个bean的增强扩展
+   
+   InstantiationAwareBeanPostProcessor 作用于实例化阶段前后
 
+   BeanPostProcessor 作用于初始化阶段前后
 
+   DestructionAwareBeanPostProcessor 作用于销毁阶段前
+2. 作用于单个bean的增强扩展
+
+   初始化阶段：Aware接口（BeanNameAware BeanClassLoaderAware BeanFactoryAware），InitializingBean接口
+   
+   销毁阶段：DisposableBean接口
+
+Bean的整个生命周期：
+1. 解析类得到BeanDefinition；
+2. InstantiationAwareBeanPostProcessor的postProcessBeforeInstantiation方法，该方法的返回值类型是Object；
+3. 执行Bean的构造器；
+4. InstantiationAwareBeanPostProcessor的postProcessAfterInstantiation方法，这个时候对象已经被实例化，但是该实例的属性还未被设置。因为它的返回值是决定要不要调用postProcessPropertyValues方法的其中一个因素，如果该方法返回false,并且不需要check，那么postProcessPropertyValues就会被忽略不执行；如果返回true，postProcessPropertyValues就会被执行；
+5. InstantiationAwareBeanPostProcessor的postProcessPropertyValues方法，可以修改原本该设置进去的属性值；
+6. 属性赋值；
+7. Bean实现的Aware接口；
+8. BeanPostProcessor的postProcessBeforeInitialization方法；
+9. Bean实现的InitializingBean接口；
+10. BeanPostProcessor的postProcessAfterInitialization方法；
+11. DestructionAwareBeanPostProcessor的postProcessBeforeDestruction的法，Bean销毁前；
+12. 销毁；
+13. Bean实现的DiposibleBean接口。
