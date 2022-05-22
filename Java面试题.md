@@ -238,20 +238,20 @@ ThreadLocal的正确使用方式：
 # 28.线程池中线程复用的原理
 线程池将线程和任务进行解耦，线程是线程，任务是任务，摆脱了之前通过Thread创建线程时的一个线程必须对应一个任务的限制。在线程池中，同一个线程可以从阻塞队列中不断获取新任务来执行，其核心原理在于线程池对Thread进行了封装，并不是每次执行任务都会调用Thread.start()来创建新线程，而是让每个线程去执行一个"循环任务"，在这个"循环任务"中不停检查是否有任务需要被执行，如果有则直接执行，也就是调用任务中的run()，通过这种方式只使用固定的线程就将所有任务的run()串联起来。
 
-# 29. 对AOP的理解
+# 29.对AOP的理解
 将程序中的交叉业务逻辑（比例：安全、日志、事务等），封装成一个切面，然后注入到目标对象（具体的业务逻辑）中。
 
-# 30. 对IOC的理解
+# 30.对IOC的理解
 IOC容器：实际就是一个map，里面存放各种对象（xml里配置的bean、@Repository、@Service、@Controller、@Component），在项目启动时通过反射创建对象并放入容器。
 
 依赖注入：依赖注入是实现IOC的方法，在IOC容器运行期间，动态的将某种依赖关系注入到对象中。
 
-# 31. BeanFactory和ApplicationContext区别
+# 31.BeanFactory和ApplicationContext区别
 1. ApplicationContext是BeanFactory的子接口，拥有BeanFactory的所有功能。同时还继承了其他的接口，像MessageSource、ApplicationEventPublisher等，所以它还支持资源访问ResourcePatternResolver、国际化，事件传播ApplicationEventPublisher、载入有继承关系的多个上下文等；
 2. BeanFactory采用的是延迟加载形式来注入bean的，只有在使用到getBean()时，才对该bean进行实例化，这样我们就不能发现一些bean的配置问题。而ApplicationContext则相反，它是在容器启动的时候，一次性创建所有的bean，这样在容器启动时就能发现Spring中存在的配置错误。
 3. BeanFactory和ApplicationContext都支持BeanPostProcesser、BeanFactoryPostProcessor的使用，但两者的区别是：BeanFactory是手动注册的，ApplicationContext是自动注册的
 
-# 32. Spring中Bean的生命周期
+# 32.Spring中Bean的生命周期
 Bean的生命周期简单分为4个阶段：实例化、属性赋值、初始化和销毁。实例化和属性赋值对应构造方法和setter方法的注入，初始化和销毁是用户能自定义扩展的两个阶段。
 
 Spring之所以强大的原因是易扩展，生命周期相关的常用扩展点非常多。扩展点分2类：
@@ -282,3 +282,118 @@ Bean的整个生命周期：
 11. DestructionAwareBeanPostProcessor的postProcessBeforeDestruction的法，Bean销毁前；
 12. 销毁；
 13. Bean实现的DiposibleBean接口。
+
+# 33.Spring中Bean的作用域
+1. singleton：默认，每个容器中只有一个Bean只有实例；
+2. prototype：为每个Bean请求提供一个实例，在每次注入时都会创建一个新的对象；
+3. request：每个http请求中创建一个单例对象；
+4. session：每个session中只有一个Bean的实例；
+5. globalSession：在一个全局的HTTP Session中，一个bean定义对应一个实例。典型情况下，仅在使用portlet context的时候有效。
+
+# 34.Spring中单例Bean是否线程安全
+Spring框架并没有对Bean进行多线程的封装处理，如果Bean是有状态的就需要开发人员进行多线程的安全保证。最简单的方法是设置Bean的作用域为prototype，或者使用synchronized、lock等实现线程同步的方法。
+
+# 35.Spring中使用哪些设计模式
+1. 工厂模式：BeanFactory就是简单工厂模式的体现，用来创建对象的实例；
+2. 单例模式：Bean默认为单例模式。
+3. 代理模式：Spring的AOP功能用到了JDK的动态代理和CGLIB字节码生成技术；
+4. 模板方法：用来解决代码重复的问题。比如：RestTemplate；
+5. 观察者模式：Spring中listener的实现ApplicationListener；
+6. 适配器模式：SpringMVC中的handler处理。
+
+# 36.Spring的事务实现方式和隔离级别
+Spring中有两个事务实现方式：编程式和声明式。编程式就是自己通过代码开启事务，提交事务，遇到异常回滚；声明式就是通过@Transactional注解，Spring会生成一个代理对象给业务逻辑添加事务。
+
+@Transactional可以通过rollbackFor属性配置，针对指定异常进行事务回滚。默认对RunnablException和Error进行回滚。
+
+Spring的隔离级别就是数据库的隔离级别：
+1. read uncommitted（读未提交）
+2. read committed（读已提交）
+3. repeatable read（可重复读）
+4. serializeble（可串行化）
+
+# 37.Spring的事务传播机制
+1. REQUIRED：默认值，支持当前事务，如果没有事务会创建一个新的事务
+2. SUPPORTS：支持当前事务，如果没有事务的话以非事务方式执行
+3. MANDATORY：支持当前事务，如果没有事务抛出异常
+4. REQUIRES_NEW：创建一个新的事务并挂起当前事务
+5. NOT_SUPPORTED：以非事务方式执行，如果当前存在事务则将当前事务挂起
+6. NEVER：以非事务方式进行，如果存在事务则抛出异常
+7. NESTED：如果当前存在事务，则在嵌套事务内执行。如果当前没有事务，则进行与REQUIRED类似的操作
+
+# 38.Spring的事务什么情况会失效
+Spring的事务原理是AOP，进行了切面增强。那么失效的根本原因就是AOP没起作用，常见的原因：
+1. 发生自调用，在类里面通过this调用本类的方法，此时this对象不是代理类；
+2. 方法不是public，@Transactional只能作用于public上，否则事务不生效；
+3. 数据库不支持事务；
+4. 没有被Spring管理；
+5. 异常被捕获了，事务不会回滚。
+
+# 39.Spring MVC的工作流程
+1. 用户发送请求到前端控制器DispatcherServlet；
+2. DispatcherServlet收到请求调用HandlerMapping处理器映射器；
+3. 处理器映射器会根据请求，找到负责处理该请求的处理器，并将其封装为处理器执行链返回 (HandlerExecutionChain) 给DispatcherServlet；
+4. DispatcherServlet会根据处理器执行链中的处理器，找到能够执行该处理器的处理器适配器HandlerAdaptor；
+5. 处理器适配器HandlerAdaptoer会调用对应的具体的Controller；
+6. Controller将处理结果封装到ModelAndView中并将其返回给处理器适配器HandlerAdaptor；
+7. HandlerAdaptor将ModelAndView交给DispatcherServlet；
+8. DisptcherServlet调用视图解析器ViewResolver，将ModelAndView中的视图名称封装为视图对象
+9. ViewResolver将封装好的视图View返回给DispatcherServlet；
+10. DispatcherServlet调用视图对象，让其自己进行渲染（将模型数据填充至视图中），形成响应对象HttpResponse；
+11. 前端控制器DispatcherServlet响应HttpResponse给浏览器。
+
+# 40.Spring MVC的九大组件
+1. HandlerMapping
+
+   HandlerMapping是一个接口，内部只有一个方法getHandler()。每个请求都需要一个Handler处理，它的作用是根据request找到对应的Handler。
+
+2. HandlerAdapter
+
+   因为SpringMVC中的Handler可以是任意的形式，只要能处理请求就可以，但是Servlet需要的处理方法的结构是固定的，都是以request和response为参数的方法。任意形式的Handler通过使用适配器，可以“转换”成固定形式，然后交给Servlet来处理。每种Handler都要有对应的HandlerAdapter才能处理请求。
+
+3. HandlerExceptionResolver
+
+   Spring MVC中负责处理异常的类，根据异常设置ModelAndView。之后交给render方法进行渲染，HandlerExceptionResolver只能处理页面渲染之前的异常，页面渲染过程中的异常，它是不能处理的。
+
+4. ViewResolver
+
+   这个接口只有一个方法resolveViewName(String viewName, Locale locale)，用来将String类型的视图名(viewName)和Locale解析为View类型的视图。
+
+5. RequestToViewNameTranslator
+
+   从request中获取ViewName
+
+6. LocaleResolver
+
+   LocaleResolver就是用于从request解析出Locale。
+
+7. ThemeResolver
+
+   解析主题
+
+8. MultipartResolver
+
+   用于处理上传请求将普通的request包装成MultipartHttpServletRequest，就可以调用getFile方法获取File。
+
+9. FlashMapManager
+
+   管理FlashMap的，FlashMap是用在redirect中传递参数。
+
+# 41.Spring Boot的自动装配原理
+Spring Boot的启动类会添加一个@SpringBootApplication，该注解包含@SpringBootConfiguration、@EnableAutoConfiguration和@ComponentScan。
+
+@EnableAutoConfiguration中的@import导入了AutoConfigurationImportSelector.class
+
+AutoConfigurationImportSelector的selectImports()通过SpringFactoriesLoader.loadFactoryNames加载META-INF/spring.factories文件
+
+获取key为EnableAutoConfiguration的值，该值就是starter的配置类全路径
+
+Spring将该类加载到容器中
+
+# 42.Spring、Spring MVC和Spring Boot的区别
+Spring是一个IOC容器，用来管理Bean，使用依赖注入实现控制反转，可以很方便的整合各种框架；提供AOP机制弥补OOP的代码重复问题，将公共处理封装成切面注定注入。
+
+Spring MVC是对Spring对web框架的一种解决方案，提供一个总的前端控制器DispatcherServlet用来接受请求，然后定义一套路由（url与hanlder的映射）及适配执行hanlder，最后将hanlder执行结果用视图解析器生成视图返回给前端。
+
+Spring Boot是Spring提供的一个快速开发工具包，让程序员更方便、更快捷的开发Spring应用，简化了配置，通过starter机制整合了一系列的框架。
+
