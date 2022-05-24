@@ -152,7 +152,7 @@ join()执行后线程进入阻塞状态，例如线程A中调用线程B的join()
 
 守护线程中产生的新线程也是守护线程。
 
-# 19.Thread和RunRunnable区别
+# 19.Thread和Runnable区别
 二者本身就没有本质区别，就是接口和类的区别。Thread实现了Runnable接口并进行了扩展，所以Runnable或Thread本身没有可比性。
 
 # 20.ThreadLocal的原理
@@ -397,3 +397,34 @@ Spring MVC是对Spring对web框架的一种解决方案，提供一个总的前�
 
 Spring Boot是Spring提供的一个快速开发工具包，让程序员更方便、更快捷的开发Spring应用，简化了配置，通过starter机制整合了一系列的框架。
 
+# 43.MyBatis的优缺点
+优点：
+1. 基于SQL语句编程，相对灵活；SQL语句配置在xml中，解除SQL语句与代码的耦合。提供xml标签，支持编写动态SQL语句；
+2. 兼容多种数据库；
+3. 支持对象与数据库的ORM字段关系映射。
+
+缺点：
+1. SQL编写工作量大，尤其当多字段、多表关联时，对开发人员编写SQL语句的功底有一定要求；
+2. SQL语句依赖数据库，导致数据库移植性差。
+
+# 44.MyBatis中#{}和${}的区别
+#{}是预编译处理，是占位符；${}是字符串替换，是拼接符
+
+MyBatis在处理#{}时，会将sql中的#{}替换成？，使用PreparedStatement执行
+
+MyBatis在处理${}时，会将sql中的${}替换成变量的值，使用Statement执行
+
+#{}的变量替换是在DBMS中，变量替换后，#{}对应的变量自动加上单引号 ‘’
+
+${}的变量替换是在DBMS外，变量替换后，${}对应的变量不会加上单引号 ‘’
+
+#{}能防止sql注入，${}不能防止sql注入
+
+# 45.MyBatis的插件运行原理
+MyBatis插件的运行是基于JDK动态代理 + 拦截器链实现
+
+Interceptor是拦截器，可以拦截Executor, StatementHandle, ResultSetHandler, ParameterHandler四个接口
+
+InterceptorChain是拦截器链，对象定义在 Configuration 类中
+
+拦截器的解析是在XMLConfigBuilder对象的parseConfiguration方法中
