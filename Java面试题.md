@@ -91,7 +91,7 @@ HashMap的容量为2的幂次方，与（n-1）& hash有关。因为只有当对
 
 # 11.Java类加载器
 Java自带有三个类加载器：
-1. BootstarpClassLoader是ExtClassLoader的父加载器，负责加载%JAVA_HOME%/lib下的jar包和class文件；
+1. BootstrapClassLoader是ExtClassLoader的父加载器，负责加载%JAVA_HOME%/lib下的jar包和class文件；
 2. ExtClassLoader是AppClassLoader的父加载器，负责加载%JAVA_HOME%/lib/ext下的jar包和class文件；
 3. AppClassLoader是自定义类加载器的父加载器，负责加载classpath下的class文件。
 
@@ -304,7 +304,7 @@ Spring框架并没有对Bean进行多线程的封装处理，如果Bean是有状
 # 36.Spring的事务实现方式和隔离级别
 Spring中有两个事务实现方式：编程式和声明式。编程式就是自己通过代码开启事务，提交事务，遇到异常回滚；声明式就是通过@Transactional注解，Spring会生成一个代理对象给业务逻辑添加事务。
 
-@Transactional可以通过rollbackFor属性配置，针对指定异常进行事务回滚。默认对RunnablException和Error进行回滚。
+@Transactional可以通过rollbackFor属性配置，针对指定异常进行事务回滚。默认对RuntimeException和Error进行回滚。
 
 Spring的隔离级别就是数据库的隔离级别：
 1. read uncommitted（读未提交）
@@ -474,3 +474,90 @@ B+树是有序结构，为了不至于树的高度太高，影响查找效率，
 最左匹配原则：最左优先，以最左边的为起点任何连续的索引都能匹配上。同时遇到范围查询(>、<、between、like)就会停止匹配。
 
 where子句搜索条件顺序调换不影响查询结果，因为Mysql中有查询优化器，会自动优化查询顺序。
+
+# 50.MySQL锁的类型
+表锁的两种模式：
+1. 共享读锁语法：lock table 表名 read
+2. 独占写锁语法：lock table 表名 write
+
+在InnoDB的实现中，行锁有3中主要的算法：
+1. Record Lock：对单个行记录上锁，称为记录锁。
+2. Gap Lock：对不包含真实存在记录的某一个间隙/范围加锁，称为间隙锁。间隙锁只有一个目的就是在RR、SERIALIZABLE隔离级别下为了防止其他事务插入数据。
+3. Next-Key Lock：相当于Record Lock + Gap Lock，对某一个行记录和这条记录与它前一条记录之间的范围/间隙都上锁，称为邻键锁。
+
+在实际场景中，行级锁加锁规则比较复杂，不同的查询条件、不同的索引、不同的隔离级别，加锁的情况可能不同。RC隔离级别下只会对记录加Record Lock，不会加Gap Lock 和 Next-Key Lock。
+
+# 51.MySQL的explain
+在select语句前增加explain关键字，MySQL就会返回执行计划的信息。但如果from中包含子查询，MySQL仍会执行该子查询，并把子查询的结果放入临时表中。
+
+执行计划的列介绍：
+1. id
+
+   id列的编号是select的序列号，有几个select就有几个id，id是按照select出现的顺序增长的，id列的值越大优先级越高，id相同则是按照执行计划列从上往下执行，id为空则是最后执行。
+
+2. select_type
+
+
+3. table
+
+   表示当前行访问的表。当from有子查询时，table列的格式为<derivedN>，表示当前查询依赖id=N行的查询，所以先执行id=N行的查询；当有union查询时，table列的格式为<union1,2>，1和2表示参与union的行id。
+
+4. partitions
+
+   查询匹配记录的分区，对于非分区表，该值为 NULL。
+
+5. type
+
+   此列表示关联类型或访问类型。也就是MySQL决定如何查找表中的行。依次从最优到最差分别为：system > const > eq_ref > ref > range > index > all
+   
+   system：该表只有一行（相当于系统表），system是const类型的特例
+
+   const：针对主键或唯一索引的等值查询扫描, 最多只返回一行数据
+
+   eq_ref：当使用了索引的全部组成部分，并且索引是PRIMARY或UNIQUE才会使用该类型
+
+   ref：当满足索引的最左匹配原则，或者索引不是PRIMARY或UNIQUE时才会发生
+
+   range：通常出现在范围查询中，比如in、between、 >、<等，使用索引来检索给定范围的行
+
+   index：扫描全索引拿到结果，一般是扫描某个二级索引，二级索引一般比较少，所以通常比ALL快一点
+
+   ALL：全表扫描，扫描聚簇索引的所有叶子节点
+
+6. possible_keys
+
+   表示在查询中可能用到的索引。如果该列为NULL，则表示没有相关索引，可以通过检查where子句看是否可以添加一个适当的索引来提高性能
+
+7. key
+
+   表示在查询时实际用到的索引。在执行计划中可能出现possible_keys列有值，而key列为null，这种情况可能是表中数据不多，MySQL认为索引对当前查询帮助不大做了全表查询
+
+8. key_len
+
+   表示M在索引里使用的字节数，通过此列可以算出具体使用了索引中的那些列。索引最大长度为768字节，当长度过大时，MySQL会做一个类似最左前缀处理，将前半部分字符提取出做索引。当字段可以为null时，还需要1个字节去记录
+
+9. ref
+
+   表示key列记录的索引中，表查找值时使用到的列或常量。常见的有const、字段名
+
+10. rows
+
+    表示在查询中估计要读取的行数，注意这里不是结果集的行数
+
+11. Extra
+
+    此列是一些额外信息。常见的重要值如下：
+
+    Using index：使用覆盖索引（如果select后面查询的字段都可以从这个索引的树中获取，不需要通过辅助索引树找到主键，再通过主键去主键索引树里获取其它字段值，这种情况一般可以说是用到了覆盖索引）。
+
+    Using where：使用 where 语句来处理结果，并且查询的列未被索引覆盖。
+
+    Using index condition：查询的列不完全被索引覆盖，where条件中是一个查询的范围。
+
+    Using temporary：MySQL需要创建一张临时表来处理查询。出现这种情况一般是要进行优化的。
+
+    Using filesort：将使用外部排序而不是索引排序，数据较小时从内存排序，否则需要在磁盘完成排序。
+
+    Select tables optimized away：使用某些聚合函数（比如 max、min）来访问存在索引的某个字段时。
+
+
