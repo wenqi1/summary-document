@@ -9,8 +9,12 @@ docker pull redis[:tag]
 ```
 ```shell
 # 3.运行镜像
-docker run -d -p 6379:6379 -privileged=true -v /users/wenqi/redis/redis.conf:/etc/redis/redis.conf -v /users/wenqi/redis/data:/data --name redis redis:tag redis-server /etc/redis/redis.conf
+docker run -d -p 6379:6379 --privileged=true \
+-v /Users/wenqi/redis/redis.conf:/etc/redis/redis.conf \
+-v /Users/wenqi/redis/data:/data \
+--name redis1 redis redis-server /etc/redis/redis.conf
 ```
+
 ```shell
 # 4.修改redis.conf
 vi /users/wenqi/redis/redis.conf
