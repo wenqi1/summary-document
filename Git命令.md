@@ -157,3 +157,12 @@ git push <仓库名> <tagname>
 # 提交所有tag到远程仓
 git push <仓库名> --tags
 ```
+
+# 18. git cherry-pick命令
+```shell
+# 把某个指定commit提交到当前分支
+git cherry-pick commitID
+
+# 把某个指定commit更新到到当前工作区和暂存区
+git cherry-pick -n commitID
+```
