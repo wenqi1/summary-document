@@ -638,9 +638,7 @@ public class Main {
 
 
 
-# 10.  *concurrent* 包
-
-![concurrent包类图](.\image\concurrent包类图.png)
+# 10. concurrent 包
 
 ## 10.1 原子类
 
