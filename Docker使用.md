@@ -137,3 +137,29 @@ docker run -it -v 主机目录:容器目录:ro --privileged=true --name=ubuntu u
 # 容器间数据卷的继承（容器ubuntu2继承容器ubuntu的数据卷映射关系）
 docker run -it -volumns-from ubuntu --privileged=true --name=ubuntu2 ubuntu
 ```
+
+# 6. Dockerfile
+## 6.1 基础知识
+1. 每条指令都必须为大写；
+2. 指令安照从上到下顺序执行；
+3. 每条指令都会创建一个新的镜像层并对镜像进行提交。
+## 6.2 指令介绍
+FROM：基础镜像
+MAINTAINER：镜像维护者的姓名和邮箱地址
+RUN：构建时需要运行的命令
+EXPOSE：暴露端口
+WORKDIR：进入交互模式时的当前路径
+USER：执行镜像的用户，默认是root
+ENV：构建时设置的环境变了
+ADD：将主机目录下的文件拷贝进镜像且自动处理url和解压tar包
+COPY：将主机目录下的文件拷贝到镜像中
+VOLUMN：容器数据卷
+CMD：容器启动后执行（多个CMD只有最会一个生效；会被docker run后面的命令覆盖）
+ENTRYPOINT：容器启动后执行（不会被docker run后面的命令覆盖，会成为它的参数；如果CMD一起使用，CMD会成为它的参数）
+## 6.3 构建镜像
+```shell
+docker build -t 镜像名:tag
+```
+
+# 7. Docker网络
+
